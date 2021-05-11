@@ -1,0 +1,1007 @@
+﻿<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" href="common/css/reveal.css">
+  <link rel="stylesheet" href="common/css/white.css">
+  <link rel="stylesheet" href="common/css/overrides.css">
+  <script src="common/js/print.js"></script>
+  <title>A Pipeline for Distributed High-resolution 3D Reconstruction of Urban Scenes from Point Clouds</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- ***
+    * Title Slide Branded
+    * -->
+            <section data-transition="fade" data-background-image="common/assets/img/titlePage.png">
+                <div style="position: absolute; top: 0px; left: 0px;">
+                    <div style="color: black; margin-top: 0px; text-align: left; margin-left: 340px; margin-top: 40px; line-height: 100%">
+                        <div style="font-size: 100%;"><strong>A Pipeline for Distributed High-resolution 3D Reconstruction of Urban Scenes from Point Clouds</strong></div>
+                        <div style="font-size: 70%; margin-top: 42px;">
+                            May 18 2021 9:45 AM - IEEE STRATUS 2021
+                        </div>
+
+
+                    </div>
+                    <div style="color: white; margin-left: 340px; margin-top: 180px; font-size: 55%;">
+                        <div style="text-align: left; float: left;">Ty Feng<span style="font-size:80%"> - Department of Computer Science - Institute for Data Science and Computing - <a href="mailto:artyfeng@miami.edu" style="color: #fff; text-decoration: underline;">artyfeng@miami.edu</a></span></div>
+                        <div style="text-align: left; float: left;">
+                            Amin Sarafraz<span style="font-size:80%"> - Department of Civil, Architectural and Environmental Engineering - Institute for Data Science and Computing</span><br>
+                            Christopher Mader<span style="font-size:80%"> - Institute for Data Science and Computing</span>
+                        </div>
+
+                        <div style="font-size: 70%; margin-top: 70px; text-align: left; float: left;">
+                            <a href="https://ytyfeng.github.io/Distributed_Recon/">Slides available on ytyfeng.github.io/Distributed_Recon/</a></li>
+
+                        </div>
+                    </div>
+
+
+
+                </div>
+
+            </section>
+
+            <!-- ***
+      * Outline
+    * -->
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span></span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Outline<span></div>
+
+                        <div class="template-content">
+
+                            <ul style="line-height: 180%;">
+                                <li>Introduction</li>
+                                <li>Prior Work</li>
+                                <li>Our Approach</li>
+                                <li>Implementation</li>
+                                <li>Results</li>
+                            </ul>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+
+            <!-- ***
+    * Proposal
+    * -->
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>the problem</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Introduction<span></div>
+
+                        <div class="template-content">
+                            With the progress in aerial 3D acquisition technologies such as camera drones and aerial LiDAR,
+                            it is now possible to have 3D scans of large urban scenes.
+                            The result of such scans is registered and aligned to the same coordinate system
+                            and then further processed and reconstructed to 3D mesh models. However, processing
+                            and reconstructing gigabytes of large-scale point cloud data with complex real-world geometry is a challenging task.
+                            It requires significant computing powers and memory usage that typical personal computers
+                            cannot afford. Aside from the memory challenges, processing and reconstructing large point clouds
+                            requires significant amount of computing time.
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <section data-transition="fade" data-background-video="common/assets/video/drone_flight.mp4" data-background-video-loop data-background-video-muted></section>
+
+
+            <!-- ***
+    * Building a mesh from point cloud
+    * -->
+            <section data-transition="fade" data-background-image="common/assets/img/pointcloud.jpg"></section>
+            <section data-transition="fade" data-background-image="common/assets/img/wireframe.jpg"></section>
+            <section data-transition="fade" data-background-image="common/assets/img/blend.jpg"></section>
+            <section data-transition="fade" data-background-image="common/assets/img/mesh.jpg"></section>
+
+
+            <!-- ***
+    * prior work
+    * -->
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>prior work</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Existing parallel methods<span></div>
+
+                        <div class="template-content" style="text-align: left;">
+
+                            <ul>
+                                <li>
+                                    Multiple threads on a single node:
+                                    <ul>
+                                        <li>Can save time but limited by memory capacity of the node</li>
+                                    </ul>
+                                </li>
+
+                                <li>
+                                    Out-of-core methods:
+                                    <ul>
+                                        <li>Can store more data into disk and swap into memory when needed, but time is bottlenecked by computer's I/O speed</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li>Julie Digne. An Analysis and Implementation of a Parallel Ball Pivoting Algorithm.Image Processing On Line, 4:149–168, 2014</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>prior work</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Surface Reconstruction<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Explicit, geometric reconstruction</li>
+                                    <ul>
+                                        <li>Ball-pivoting algorithm</li>
+                                        <ul><li>Radius selection problem, holes, require uniformly sampled point clouds</li> </ul>
+                                        <li>Delaunay-based triangulation</li>
+                                        <ul><li>Provably correct, but require densely-sampled, noise-free point clouds</li></ul>
+                                    </ul>
+
+                                </ul>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li>Fausto Bernardini, Joshua Mittleman, Holly Rushmeier, Claudio Silva, and Gabriel Taubin. The ball-pivoting algorithm for surface reconstruction. IEEE Transactions on Visualization and Computer Graphics, 5(4):349–359, Oct 1999.</li>
+                            <li>Frédéric Cazals and Joachim Giese n.Delaunay Triangulation Based Surface Reconstruction, pages 231–276. Springer Berlin Heidelberg, Berlin, Heidelberg, 2006.</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>prior work</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Surface Reconstruction<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Implicit, function-fitting reconstruction</li>
+                                    <ul>
+                                        <li>Poisson Reconstruction</li>
+                                        <ul>
+                                            <li>
+                                                Fit an implicit function to indicator gradient from oriented points (point + normal)
+                                            </li>
+                                            <li> Indicator gradient: 0 almost everywhere, 1 at surface; since indicator gradient is equal to inward surface normal (normalized)</li>
+                                            <li>Extract 0-th level isosurface from implicit function using Marching Cubes</li>
+                                            <li>Adaptive octree to represent the implicit function and to solve the Poisson problem. Increasing octree max depth increases mesh resolution (triangles and file size), time, and memory by a factor of 4</li>
+                                        </ul>
+
+                                    </ul>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li>Michael Kazhdan, Matthew Bolitho, and Hugues Hoppe. Poisson surface reconstruction. In Proceedings of the Fourth Eurographics Symposium on Geometry Processing, SGP 06, page 6170, Goslar, DEU, 2006. Eurographics Association.</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>prior work</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>BPA vs Poisson<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <img src="common/assets/img/bpa_poisson.png">
+
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li><a href="http://tyfeng.com/PoissonVisualizer">tyfeng.com/PoissonVisualizer</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+
+
+                    <iframe style="width:100%; height:700px" src="http://tyfeng.com/PoissonVisualizer"> </iframe>
+
+
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li><a href="http://tyfeng.com/PoissonVisualizer">tyfeng.com/PoissonVisualizer</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+
+            <!--
+         our method
+
+    -->
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our method<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            Fully independent, distributed, multi-node method
+
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li> </li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <img src="common/assets/img/pipeline.png">
+
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li> </li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Chunk Point Clouds</li>
+                                    <ul>
+                                        <li>
+                                            Chunk point clouds by x and y axes since the range of z values
+                                            are relatively small in urban scenes
+                                        </li>
+                                        <li>Compute the axis-aligned bounding box (max and min bounds)</li>
+                                        <li>Compute an x by y grid for point cloud's bounding box</li>
+                                        <li>Crop by x * y bounding boxes</li>
+                                    </ul>
+                                    <li>Adding overlap</li>
+                                    <ul>
+                                        <li>Degraded reconstruction along edges (open shapes)</li>
+                                        <li>Add a 5% overlap before meshing</li>
+                                    </ul>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+                            <figure>
+                                <img src="common/assets/img/chunks.png" style="width:30%">
+                                <figcaption>
+                                    Adding overlapping boundary to each chunk. Blue boxes represent original bounding boxes.
+                                    Magenta boxes represent bounding boxes with overlapping boundary.
+                                </figcaption>
+                            </figure>
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li> </li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Fully-independent, distributed, multi-node processing</li>
+                                    <ul>
+                                        <li>After chunking a point cloud into manageable chunks, we distribute the subsequent processing and meshing of each chunk as an independent process on different nodes on an HPC cluster</li>
+                                        <li>Fully-independent processes because chunking fully separates data; the failure of one process does not have an impact on other processes</li>
+                                        <li>Memory usage is bound by the capacity of a node, but chunking and distributed processing on multiple nodes reduce memory needed for each node</li>
+                                        <li>Each chunk of point cloud is processed and meshed with a single process from start to finish, so it is easier to debug by simply reading the output and error log associated with a particular point cloud chunk</li>
+
+                                    </ul>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Normal estimation</li>
+                                    <ul>
+                                        <li>Nearest neighbor search within a search radius and/or k-neighbors</li>
+                                        <li>Principal component analysis (PCA) finds an orthogonal basis that best represents a given neighborhood of points. It finds the best-fitting plane by minimizing the average squared distance from a neighborhood point to the plane </li>
+                                        <li>The normal is a unit vector orthogonal to the plane</li>
+                                    </ul>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li>Hugues Hoppe, Tony DeRose, Tom Duchamp, John McDonald, and Werner Stuetzle. Surface reconstruction from unorganized points. SIGGRAPH Comput. Graph.,26(2):7178, July 1992.</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Poisson reconstruction</li>
+                                    <ul>
+                                        <li>Point cloud with normals can be meshed using Poisson Reconstruction with a user-defined octree depth</li>
+                                    </ul>
+                                    <li>Merging</li>
+                                    <ul>
+                                        <li>Using original point cloud bounding boxes, crop the overlapped meshes back</li>
+                                        <li>Add 1% overlap if necessary</li>
+                                    </ul>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Our reconstruction pipeline<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <ul style="margin-top: 3%;">
+                                    <li>Reconstruction at higher resolution</li>
+                                    <ul>
+                                        <li>
+                                            We can offset the increased memory usage due to increase in resolution/octree depth by reducing the chunk size.
+                                        </li>
+                                        <li>
+                                            Increasing octree depth increases time, memory usage, and number of triangles by roughly a factor of 4.
+                                        </li>
+
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Depth</th>
+                                                    <th>Time</th>
+                                                    <th>Maximum Memory</th>
+                                                    <th>Triangles</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>8</td>
+                                                    <td>141.46 sec</td>
+                                                    <td>243 MB</td>
+                                                    <td>202,163</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>9</td>
+                                                    <td>234.90 sec</td>
+                                                    <td>629 MB</td>
+                                                    <td>957,104</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>10</td>
+                                                    <td>677.01 sec</td>
+                                                    <td>1980 MB</td>
+                                                    <td>4,524,372</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>11</td>
+                                                    <td>2663.84 sec</td>
+                                                    <td>6646 MB</td>
+                                                    <td>20,857,780</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>12</td>
+                                                    <td>10985.97 sec</td>
+                                                    <td>23781 MB</td>
+                                                    <td>97,923,718</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                    </ul>
+                                </ul>
+
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>our method</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span> <span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <img src="common/assets/img/cars.png" />
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li>
+                                Comparison of Poisson meshes generated using different octree depth values (Data: cars in a parking lot)
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <!-- ***
+    * Implementation
+    * -->
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>implementation</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Implementation<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+
+
+                                <ul>
+                                    <li>Chunk point cloud by a x by y grid computed from its bounding box</li>
+                                    <li>Shell commands for each process > shell script</li>
+                                    <li>Submit shell script as a job to LSF job scheduler on cluster</li>
+                                    <li>
+                                        Each process does the following for a point cloud chunk:
+                                        <ul style="font-size: 90%;">
+                                            <li>Adding a 5% overlap</li>
+                                            <li>kNN and PCA for normal estimation</li>
+                                            <li>Poisson Reconstruction</li>
+                                            <li>Cropping back to original bounding box</li>
+                                        </ul>
+                                    <li>We used <a href="http://open3d.org">Open3D </a> </li>
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li>Qian-Yi Zhou, Jaesik Park, and Vladlen Koltun. Open3D: A modern library for 3D data processing. arXiv:1801.09847, 2018.</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <!--***
+    * Results
+    * -->
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>results</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Results<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Method</th>
+                                            <th>Total time (seconds)</th>
+                                            <th>Memory usage per node (GB)</th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Single node without chunking</td>
+                                            <td>2233</td>
+                                            <td>250.341</td>
+
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                Our method with
+                                                36 chunks (15 nodes)
+                                            </td>
+                                            <td>955</td>
+                                            <td>16.972</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                Our method with
+                                                36 chunks (30 nodes)
+                                            </td>
+                                            <td>904</td>
+                                            <td>8.185</td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                                Max time and memory usage for processing and reconstructing 1.18 billion points
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>results</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Results<span></div>
+
+                        <div class="template-content" style="max-width: 100% !important;">
+
+                            <img src="common/assets/img/36_chunks.png">
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li> Result of our reconstruction with example data divided into 36 chunks</li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>conclusion</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Conclusion<span></div>
+
+                        <div class="template-content" style="max-width: 85% !important;">
+                            We have shown that large-scale 3D reconstruction can be handled using a distributed method on
+                            computers with memory capacity similar to personal computers’ by first chunking the point cloud
+                            and then processing the chunks on multiple nodes. We have demonstrated that large memory is not required
+                            to process and mesh large-scale point clouds. By addressing the memory issue using our method, we can
+                            also greatly improve the reconstruction resolution using higher octree depth levels.
+                            The resulting mesh is high in resolution and show no negative effects due to open shapes caused by
+                            our chunking process.
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>credits</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Acknowledgments<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+
+                                University of Miami Institute for Data Science and Computing, Advanced Computing
+                                <br>
+                                for the use of HPC clusters
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>credits</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>References<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+                                <ul>
+
+                                    <li>Julie Digne. An Analysis and Implementation of a Parallel Ball Pivoting Algorithm. Image Processing On Line, 4:149–168, 2014</li>
+                                    <li>Fausto Bernardini, Joshua Mittleman, Holly Rushmeier, Claudio Silva, and Gabriel Taubin. The ball-pivoting algorithm for surface reconstruction. IEEE Transactions on Visualization and Computer Graphics, 5(4):349–359, Oct 1999.</li>
+                                    <li>Frédéric Cazals and Joachim Giese n.Delaunay Triangulation Based Surface Reconstruction, pages 231–276. Springer Berlin Heidelberg, Berlin, Heidelberg, 2006.</li>
+                                    <li>Michael Kazhdan, Matthew Bolitho, and Hugues Hoppe. Poisson surface reconstruction. In Proceedings of the Fourth Eurographics Symposium on Geometry Processing, SGP 06, page 6170, Goslar, DEU, 2006. Eurographics Association.</li>
+
+                                </ul>
+
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>credits</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>References<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+                            <div style="display: inline-block; width: 100%">
+                                <ul>
+                                    <li>William E. Lorensen and Harvey E. Cline. Marching cubes: A high resolution 3d surface construction algorithm. In Proceedings of the 14th Annual Conference on Computer Graphics and Interactive Techniques, SIGGRAPH 87, page 163169, New York, NY, USA, 1987. Association for Computing Machinery.</li>
+                                    <li>Hugues Hoppe, Tony DeRose, Tom Duchamp, John McDonald, and Werner Stuetzle. Surface reconstruction from unorganized points. SIGGRAPH Comput. Graph.,26(2):7178, July 1992.</li>
+                                    <li>Qian-Yi Zhou, Jaesik Park, and Vladlen Koltun. Open3D: A modern library for 3D data processing. arXiv:1801.09847, 2018.</li>
+                                    <li>Michael Kazhdan. Adaptive multigrid solvers (version 13.00), June 2020.</li>
+
+                                </ul>
+
+
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-citation">
+                        <ul style="list-style: none;">
+                            <li></li>
+                        </ul>
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+
+
+            <section data-transition="fade" data-background-video="common/assets/video/ML_onetile.mp4" data-background-video-loop data-background-video-muted>
+                <div>
+                    <ul style="list-style: none; padding-top:600px;">
+                        <li>Video credit: Timothy Norris (University of Miami, Tiling the MagicVerse) </li>
+                    </ul>
+                </div>
+            </section>
+
+
+            <section data-transition="fade">
+                <div class="template-container">
+                    <div class="template-header"><span>thanks</span></div>
+                    <div class="template-content-containter">
+
+                        <div class="template-title"><span>Thank you<span></div>
+
+                        <div class="template-content" style="max-width: 90% !important;">
+
+
+                            Slides available on <a href="https://ytyfeng.github.io/Distributed_Recon/">https://ytyfeng.github.io/Distributed_Recon/</a></li>
+
+
+                        </div>
+
+                    </div>
+
+                    <div class="template-footer"><table width=100%><tr><td background="common/assets/img/UM.jpg" height=80 width=98></td><td background="common/assets/img/bar.jpg"></td><td width=60></td></tr></table></div>
+                </div>
+            </section>
+            
+
+
+        </div>
+                        </div>
+                        <script src="common/js/reveal.js"></script>
+                        <script src="common/js/notes.js"></script>
+                        <script src="common/js/head.min.js"></script>
+                        <script>Reveal.initialize({
+                                width: 1366, height: 768, margin: 0.05,
+                                controls: false,
+                                progress: true,
+                                history: true,
+                                center: true,
+                                mouseWheel: false,
+                                chart: {
+                                    defaults: {
+                                        global: {
+                                            defaultFontSize: 20,
+                                            title: { fontColor: "#333" },
+                                            legend: {
+                                                position: "top",
+                                                labels: { fontColor: "#333" },
+                                            },
+                                            tooltips: {
+                                                labels: { fontColor: "#333" },
+                                            },
+                                        },
+                                        scale: {
+                                            scaleLabel: { fontColor: "#333" },
+                                            gridLines: { color: "#333", zeroLineColor: "#333" },
+                                            ticks: { fontColor: "#333" },
+                                        }
+                                    },
+                                },
+                                dependencies: [
+                                    { src: 'common/js/Chart.min.js' },
+                                    { src: 'common/js/csv2chart.js' }
+                                ]
+                            });</script>
+</body>
+</html>

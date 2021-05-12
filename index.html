@@ -229,8 +229,8 @@
                                                 Fit an implicit function to indicator gradient from oriented points (point + normal)
                                             </li>
                                             <li> Indicator gradient: 0 almost everywhere, 1 at surface; since indicator gradient is equal to inward surface normal (normalized)</li>
-                                            <li>Extract 0-th level isosurface from implicit function using Marching Cubes</li>
                                             <li>Adaptive octree to represent the implicit function and to solve the Poisson problem. Increasing octree max depth increases mesh resolution (triangles and file size), time, and memory by a factor of 4</li>
+					    <li>Extract 0-th level isosurface from implicit function using Marching Cubes</li>
                                         </ul>
 
                                     </ul>
@@ -678,7 +678,7 @@
 
 
                                 <ul>
-                                    <li>Chunk point cloud by a x by y grid computed from its bounding box</li>
+                                  <li>Implemented on IBM Power9 HPC cluster (ppcle64)</li>
                                     <li>Shell commands for each process > shell script</li>
                                     <li>Submit shell script as a job to LSF job scheduler on cluster</li>
                                     <li>
